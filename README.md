@@ -10,14 +10,17 @@ The talk was made using the IPython notebook, revealJS and the awesome posts by 
 How to create the HTML5 slides
 ==============================
 
-    ipython3 nbconvert 'name of the ipynb.ipynb' --to slides --template output-toggle
+    ipython3 nbconvert 'Brython talk PyConEs 2013.ipynb' --to slides --template output-toggle
     
-How to run the apps
-===================
 
-    cd apps/
+How to see the slides and the apps working
+==========================================
+
+Change to the location where the html files are placed and run
+
     python -m http.server
     
+and then open a browser at `http://0.0.0.0:8000/`
 
 Apps running on Gdrive
 ======================
