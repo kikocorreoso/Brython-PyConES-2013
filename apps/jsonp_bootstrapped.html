@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.png">
+
+    <title>Populate the page using JSONP</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/style/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="static/style/starter-template.css" rel="stylesheet">
+    <script type="text/javascript" src="brython.js"></script>
+    
+   <script type="text/python">  
+import html
+import json
+
+def processJSON(jsondata):
+    try:
+        del doc["tablebody"]
+        doc["mytable"] <= html.TBODY(Id = "tablebody")
+    except:
+        doc["mytable"] <= html.TBODY(Id = "tablebody")
+    api = doc['apiform'].value
+    if api == "Flickr":
+        for item in jsondata.items:
+            row = html.TR()
+            desc = html.P(html.H1(item.title))
+            desc = desc + html.P('Taken by: ' + html.EM(item.author))
+            desc = desc + html.P('Shot on: ' + html.EM(item.date_taken))
+            link = html.A(html.IMG(src = item.media.m), href = item.link)
+            row <= html.TD(desc) + html.TD(link)
+            doc["tablebody"] <= row
+    if api == "Reddit":
+        for item in jsondata.data.children:
+            data = item.data
+            row = html.TR()
+            desc = html.P(html.H1(html.A(data.title, href = data.url)))
+            score = str(data.score)
+            ups = str(data.ups)
+            downs = str(data.downs)
+            text = html.EM(score + '(' + ups + '/' + downs + ')')
+            desc = desc + html.P('Score: ' + text)
+            reddit = "http://www.reddit.com"
+            link = html.A(data.num_comments, href = reddit + data.permalink)
+            desc = desc + html.P('# comments: ' + link)
+            row <= html.TD(desc)
+            doc["tablebody"] <= row
+            
+def jsonp_call():
+    tag = doc['tagform'].value
+    api = doc['apiform'].value
+    try:
+        del doc["api_call"]
+    except:
+        pass
+
+    myscript = html.SCRIPT(Id = "api_call")
+    myscript.type = "text/javascript"
+    if api == "Flickr":
+        url = 'http://api.flickr.com/services/feeds/photos_public.gne?jsoncallback=processJSON&tags=%s&tagmode=any&format=json' % tag
+    if api == "Reddit":
+        url = 'http://www.reddit.com/r/Python/search.json?q=%s&restrict_sr=on&sort=top&t=week&jsonp=processJSON' % tag
+    doc['request'].text = ''
+    doc['request'] <= html.P('requesting ' + url)
+    myscript.src = url
+    doc[html.HEAD][0] <= myscript
+ 
+   </script>
+   
+  </head>
+
+  <body onload="brython()">
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="./jsonp_bootstrapped.html">JSONP-call-Brython</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="http://www.brython.info">Brython home page</a></li>
+            <li><a href="#">App source</a></li>
+            <li><a href="https://bitbucket.org/olemis/brython/src">Brython source</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="starter-template">
+        
+        <h1>JSONP call example made with Brython</h1>
+        
+        <p class="lead">This simple app has been tested only in Firefox.</p>
+        
+        <form class="form-horizontal" role="form">
+          <div class="form-group">
+            <label for="tagform" class="col-lg-2 control-label">Tag</label>
+            <div class="col-lg-10">
+              <input id="tagform" type="text" class="form-control" placeholder="Tag to search">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="apiform" class="col-lg-2 control-label">API</label>
+            <div class="col-lg-10">
+              <select id="apiform" class="form-control">
+                <option>Flickr</option>
+                <option>Reddit</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-lg-offset-2 col-lg-10">
+              <button type="button" class="btn btn-default" onclick="jsonp_call()">Search</button>
+            </div>
+          </div>
+        </form>
+        
+        <div id="request"></div>
+
+        <table id="mytable" class="table table-striped table-bordered table-hover table-responsive">
+          
+        </table>
+        
+      </div><!-- /.starter-template -->
+
+    </div><!-- /.container -->
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="static/js/jquery.min.js"></script>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="static/js/bootstrap.min.js"></script>
+    <!-- Brython scripts
+    ================================================== -->
+
+  </body>
+</html>

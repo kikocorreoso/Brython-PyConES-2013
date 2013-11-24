@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta name="description" content="">
+   <meta name="author" content="">
+   <link rel="icon" href="static/images/pycones.ico" />
+       
+
+   <title>Hangman Game</title>
+
+   <!-- Bootstrap core CSS -->
+   <link href="static/style/bootstrap.min.css" rel="stylesheet">
+
+   <!-- Custom styles for this template -->
+   <link href="static/style/starter-template.css" rel="stylesheet">
+   <script type="text/javascript" src="brython.js"></script>
+   
+  <script type="text/python">  
+
+import math
+import random
+import html
+
+words = ["abate","aberrant","abscond","accolade","acerbic","acumen",
+         "adulation","adulterate","aesthetic","aggrandize","alacrity",
+         "alchemy","amalgamate","ameliorate","amenable","anachronism",
+         "anomaly","approbation","archaic","arduous","ascetic","assuage",
+         "astringent","audacious","austere","avarice","aver","axiom",
+         "bolster","bombast","bombastic","bucolic","burgeon","cacophony",
+         "canon","canonical","capricious","castigation","catalyst","caustic",
+         "censure","chary","chicanery","cogent","complaisance","connoisseur",
+         "contentious","contrite","convention","convoluted","credulous",
+         "culpable","cynicism","dearth","decorum","demur","derision",
+         "desiccate","diatribe","didactic","dilettante","disabuse",
+         "discordant","discretion","disinterested","disparage","disparate",
+         "dissemble","divulge","dogmatic","ebullience","eccentric","eclectic",
+         "effrontery","elegy","eloquent","emollient","empirical","endemic",
+         "enervate","enigmatic","ennui","ephemeral","equivocate","erudite",
+         "esoteric","eulogy","evanescent","exacerbate","exculpate","exigent",
+         "exonerate","extemporaneous","facetious","fallacy","fawn","fervent",
+         "filibuster","flout","fortuitous","fulminate","furtive","garrulous",
+         "germane","glib","grandiloquence","gregarious","hackneyed","halcyon",
+         "harangue","hedonism","hegemony","heretical","hubris","hyperbole",
+         "iconoclast","idolatrous","imminent","immutable","impassive",
+         "impecunious","imperturbable","impetuous","implacable","impunity",
+         "inchoate","incipient","indifferent","inert","infelicitous",
+         "ingenuous","inimical","innocuous","insipid","intractable",
+         "intransigent","intrepid","inured","inveigle","irascible","laconic",
+         "laud","loquacious","lucid","luminous","magnanimity","malevolent",
+         "malleable","martial","maverick","mendacity","mercurial","meticulous",
+         "misanthrope","mitigate","mollify","morose","mundane","nebulous",
+         "neologism","neophyte","noxious","obdurate","obfuscate","obsequious",
+         "obstinate","obtuse","obviate","occlude","odious","onerous","opaque",
+         "opprobrium","oscillation","ostentatious","paean","parody","pedagogy",
+         "pedantic","penurious","penury","perennial","perfidy","perfunctory",
+         "pernicious","perspicacious","peruse","pervade","pervasive",
+         "phlegmatic","pine","pious","pirate","pith","pithy","placate",
+         "platitude","plethora","plummet","polemical","pragmatic","prattle",
+         "precipitate","precursor","predilection","preen","prescience",
+         "presumptuous","prevaricate","pristine","probity","proclivity",
+         "prodigal","prodigious","profligate","profuse","proliferate",
+         "prolific","propensity","prosaic","pungent","putrefy","quaff","qualm",
+         "querulous","query","quiescence","quixotic","quotidian","rancorous",
+         "rarefy","recalcitrant","recant","recondite","redoubtable",
+         "refulgent","refute","relegate","renege","repudiate","rescind",
+         "reticent","reverent","rhetoric","salubrious","sanction","satire",
+         "sedulous","shard","solicitous","solvent","soporific","sordid",
+         "sparse","specious","spendthrift","sporadic","spurious","squalid",
+         "squander","static","stoic","stupefy","stymie","subpoena","subtle",
+         "succinct","superfluous","supplant","surfeit","synthesis","tacit",
+         "tenacity","terse","tirade","torpid","torque","tortuous","tout",
+         "transient","trenchant","truculent","ubiquitous","unfeigned",
+         "untenable","urbane","vacillate","variegated","veracity","vexation",
+         "vigilant","vilify","virulent","viscous","vituperate","volatile",
+         "voracious","waver","zealous"]
+
+def find_positions(a_string, letter):
+    positions = []
+    for i, value in enumerate(a_string):
+        if value == letter:
+            positions.append(i)
+    return positions
+        
+         
+class Hangman:
+    def __init__(self, word):
+        self.word = word
+        self.letters = "abcdefghijklmnopqrstuvwxyz"
+        self.letters_used = set()
+        self.errors = 0
+        self.guesses = 0
+        self.canvas = doc['hangman']
+        self.ctx = self.canvas.getContext('2d')
+        self.w = self.canvas.width
+        self.h = self.canvas.height
+        self.buttons_initialised = 0
+        self.start_game()
+              
+    def draw_line(self, startx, starty, endx, endy, width = 1, color = "black"):
+        self.ctx.lineWidth = width
+        self.ctx.strokeStyle = color
+        self.ctx.beginPath()
+        self.ctx.moveTo(startx, starty)
+        self.ctx.lineTo(endx, endy)
+        self.ctx.stroke()
+           
+    def start_game(self):
+        print(self.word)
+        self.letters_used = set()
+        self.errors = 0
+        self.guesses = 0
+        self._init_draw()
+        self._init_word()
+        if self.buttons_initialised:
+            self._init_buttons()
+       
+    def _init_draw(self):
+        self.ctx.clearRect(0, 0, self.w, self.h)
+        self.draw_line(200, self.h - 100, 200, 20, 
+                       width = 5, color = "gray")
+        self.draw_line(200, 20, 350, 20, width = 5, color = "gray")
+        self.draw_line(350, 20, 350, 40, width = 2, color = "black")
+        self.draw_line(0, self.h - 100, self.w, self.h - 100, 
+                       width = 10, color = "black")
+   
+    def _init_word(self):
+        length = len(self.word)
+        init = int((self.w - (length * 40 + (length - 1) * 5)) / 2)
+        for i in range(length):
+            self.draw_line(init + (40 + 5) * i, self.h - 10, 
+                           init + (40 + 5) * i + 40, self.h - 10, 
+                           width = 3, color = "black")
+   
+    def _init_buttons(self):
+        #doc['buttons_a'].html = ""
+        #doc['buttons_b'].html = ""
+        for i, letter in enumerate(self.letters):
+            doc['btn_' + letter].Class = "btn btn-default btn-lg"
+   
+    def draw_evolution(self):     
+        if self.errors == 1:
+            self.ctx.lineWidth = 3
+            self.ctx.strokeStyle = "gray"
+            self.ctx.beginPath()
+            self.ctx.arc(350,60,20, 0, math.pi * 2, True)
+            self.ctx.closePath()
+            self.ctx.stroke()
+       
+        if self.errors == 2:
+            self.draw_line(350, 80, 350, 120, width = 3, color = "gray")
+       
+        if self.errors == 3:
+            self.draw_line(350, 100, 320, 80, width = 3, color = "gray")
+           
+        if self.errors == 4:
+            self.draw_line(350, 100, 380, 80, width = 3, color = "gray")
+           
+        if self.errors == 5:
+            self.draw_line(350, 120, 320, 160, width = 3, color = "gray")
+           
+        if self.errors == 6:
+            self.draw_line(350, 120, 380, 160, width = 3, color = "gray")
+            ans = win.confirm("You lose :-(\nTry again?")
+            if ans:
+                self.word = words[random.randint(0,len(words))]
+                self.start_game()
+            
+    def draw_letter(self, letter):
+        pos = find_positions(self.word, letter)
+        if letter in self.word:
+            self.guesses = self.guesses + len(pos)
+        self.ctx.font = "50px sans-serif"
+        self.ctx.textAlign = "center"
+        self.ctx.strokeStyle = "black"
+        self.ctx.fillStyle = "black"
+        if pos:
+            length = len(self.word)
+            init = int((self.w - (length * 40 + (length - 1) * 5)) / 2)
+            for i in pos:
+                self.ctx.fillText(self.word[i], 
+                                    init + (40 + 5) * i + 20, 
+                                    self.h - 20)
+                self.ctx.strokeText(self.word[i], 
+                                    init + (40 + 5) * i + 20, 
+                                    self.h - 20)
+                if self.guesses == len(self.word):
+                    ans = win.confirm("You Win :-D\nTry again?")
+                    if ans:
+                        self.word = words[random.randint(0,len(words))]
+                        self.start_game()
+           
+    def keydown(self,e):
+        key = e.keyCode - 65
+        if key >= 0 and key < len(self.letters):
+            letter = self.letters[key]
+            self.letters_used.add(letter)
+            if letter in self.word:
+                doc['btn_' + letter].Class = "btn btn-default btn-lg btn-success"
+                self.draw_letter(letter)
+            else:
+                doc['btn_' + letter].Class = "btn btn-default btn-lg btn-danger"
+                self.errors = self.errors + 1
+                self.draw_evolution()
+    
+    def keyclick(self, key):
+        letter = self.letters[key]
+        if letter in self.word:
+            doc['btn_' + letter].Class = "btn btn-default btn-lg btn-success"
+            self.draw_letter(letter)
+            self.letters_used.add(letter)
+        else:
+            doc['btn_' + letter].Class = "btn btn-default btn-lg btn-danger"
+            if letter not in self.letters_used:
+                self.letters_used.add(letter)
+                self.errors = self.errors + 1
+                self.draw_evolution()
+               
+def create_buttons(obj, obj_name):
+    obj.buttons_initialised = 1
+    doc['buttons_a'].html = ""
+    doc['buttons_b'].html = ""
+    for i, letter in enumerate("abcdefghijklmnopqrstuvwxyz"):
+        if letter < 'n':
+            onclickevent = "getattr(%s,'keyclick')(%s)" % (obj_name, i)
+            print(onclickevent)
+            button = html.BUTTON(letter, Id="btn_%s"  % letter, 
+                                         Class="btn btn-default btn-lg", 
+                                         onclick=onclickevent)
+            doc['buttons_a'] <= button
+        else:
+            onclickevent = "getattr(%s,'keyclick')(%s)" % (obj_name, i)
+            button = html.BUTTON(letter, Id="btn_%s" % letter, 
+                                         Class="btn btn-default btn-lg", 
+                                         onclick=onclickevent)
+            doc['buttons_b'] <= button
+
+
+hangman = Hangman(words[random.randint(0,len(words))])            
+create_buttons(hangman, 'hangman')
+doc.bind('keydown', hangman.keydown)
+ 
+  </script>
+ 
+ </head>
+
+ <body onload="brython()">
+
+   <div class="navbar navbar-inverse navbar-fixed-top">
+     <div class="container">
+       <div class="navbar-header">
+         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+         </button>
+         <a class="navbar-brand" href="#">Hangman-Brython</a>
+       </div>
+       <div class="collapse navbar-collapse">
+         <ul class="nav navbar-nav">
+           <li><a href="http://www.brython.info">Brython home page</a></li>
+           <li><a href="#">App source</a></li>
+           <li><a href="https://bitbucket.org/olemis/brython/src">Brython source</a></li>
+         </ul>
+       </div><!--/.nav-collapse -->
+     </div>
+   </div>
+
+   <div class="container">
+
+     <div class="starter-template">
+       
+       <h1>Hangman game made with Brython</h1>
+       <p class="lead">This simple app has been tested only in Firefox and it's been inspired by 
+                       <a href="http://jenniferdewalt.com/hangman/game">Jennifer Dewalt day 78 exercise</a>.
+       </p>
+       
+       <div id="canvas_container">
+         <canvas id="hangman" height="300" width="700"></canvas>
+       </div>
+       
+       <p>
+         <div id="buttons_a" class="btn-group">
+         </div><!-- /.buttons_a -->
+       </p>
+       
+       <p>
+         <div id="buttons_b" class="btn-group">
+         </div><!-- /.buttons_b -->
+       </p>
+         
+     </div><!-- /.starter-template -->
+
+   </div><!-- /.container -->
+
+   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+   <script src="static/js/jquery.min.js"></script>
+   <!-- Bootstrap core JavaScript
+   ================================================== -->
+   <!-- Placed at the end of the document so the pages load faster -->
+   <script src="static/js/bootstrap.min.js"></script>
+   <!-- Brython scripts
+   ================================================== -->
+
+ </body>
+</html>

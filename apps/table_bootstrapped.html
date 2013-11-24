@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="../../assets/ico/favicon.png">
+
+    <title>HTML (+ Brython): Managing HTML</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="static/style/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="static/style/starter-template.css" rel="stylesheet">
+
+    
+   <script type="text/python">  
+import html
+import json
+
+data = json.loads(open('static/2013.es.pycon.org.json').read())
+
+tab = html.TABLE(Class="table table-bordered table-hover")
+tab <= html.THEAD(html.TR(html.TH('Day', Class = "text-center") + 
+                          html.TH('Hour', Class = "text-center") + 
+                          html.TH('Track', Class = "text-center") + 
+                          html.TH('Title', Class = "text-center") + 
+                          html.TH('Abstract', Class = "text-center")))
+
+tbody = html.TBODY()
+for element in data:
+    my_row = html.TR()
+    my_row <= html.TD(element['sc_day'])
+    my_row <= html.TD(element['sc_hour'])
+    my_row <= html.TD(element['sc_track'])
+    my_row <= html.TD(element['title'])
+    my_row <= html.TD(element['abstract'])
+    tbody <= my_row    
+tab <= tbody
+ 
+doc['my_html'] <= tab
+ 
+   </script>
+   
+  </head>
+
+  <body onload="brython()">
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="./table_bootstrapped.html">Managing HTML-Brython</a>
+        </div>
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="http://www.brython.info">Brython home page</a></li>
+            <li><a href="#">App source</a></li>
+            <li><a href="https://bitbucket.org/olemis/brython/src">Brython source</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="starter-template">
+        
+        <h1>HTML (+ Brython): Managing HTML</h1>
+        
+        <p class="lead">Creating html using Brython.</p>
+        
+          <div id="my_html" class="row">
+            <!-- div where to create html from brython -->        
+          </div>
+          
+      </div><!-- /.starter-template -->
+
+    </div><!-- /.container -->
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="static/js/jquery.min.js"></script>
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="static/js/bootstrap.min.js"></script>
+    <!-- Brython scripts
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/javascript" src="brython.js"></script>
+
+  </body>
+</html>

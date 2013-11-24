@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta name="description" content="">
+   <meta name="author" content="">
+   <link rel="shortcut icon" href="../../assets/ico/favicon.png">
+
+   <title>HTML5 Drag&Drop puzzle</title>
+
+   <!-- Bootstrap core CSS -->
+   <link href="static/style/bootstrap.min.css" rel="stylesheet">
+
+   <!-- Custom styles for this template -->
+   <link href="static/style/starter-template.css" rel="stylesheet">
+   <script type="text/javascript" src="brython.js"></script>
+   
+  <script type="text/python">  
+
+import html
+import math
+import random
+import time
+
+class Puzzle:
+   def __init__(self):
+       self.difficulty = 3
+       self.puzzle_hover_tint = '#009900'
+       self.img = html.IMG(src = "static/images/python.png")
+       self.piece_w = math.floor(self.img.width / self.difficulty)
+       self.piece_h = math.floor(self.img.height / self.difficulty)
+       self.puzzle_w = self.piece_w * self.difficulty
+       self.puzzle_h = self.piece_h * self.difficulty
+       self.set_canvas()
+       self.init_puzzle()
+   
+   def set_canvas(self):
+       self.canvas = doc['canvas']
+       self.ctx = self.canvas.getContext('2d')
+       self.canvas.width = self.puzzle_w
+       self.canvas.height = self.puzzle_h
+       self.canvas.style.border = "1px solid black"
+       
+   def init_puzzle(self):
+       self.mouse = {'x': 0,'y': 0}
+       self.current_piece = None
+       self.current_drop_piece = None
+       self.ctx.drawImage(self.img.elt, 0, 0)
+       self.create_title("Click to Start Puzzle")
+       self.build_pieces()
+       
+   def create_title(self, msg):
+       self.ctx.fillStyle = "#000000"
+       self.ctx.globalAlpha = .4
+       self.ctx.fillRect(100, self.puzzle_h - 40, self.puzzle_w - 200,40)
+       self.ctx.fillStyle = "#FFFFFF"
+       self.ctx.globalAlpha = 1
+       self.ctx.textAlign = "center"
+       self.ctx.textBaseline = "middle"
+       self.ctx.font = "20px Arial"
+       self.ctx.fillText(msg, self.puzzle_w / 2, self.puzzle_h - 20)
+       
+   def build_pieces(self):
+       self.pieces = []
+       xpos = 0
+       ypos = 0
+       for i in range(self.difficulty * self.difficulty):
+           piece = {}
+           piece['sx'] = xpos
+           piece['sy'] = ypos
+           self.pieces.append(piece)
+           xpos = xpos + self.piece_w
+           if xpos >= self.puzzle_w:
+               xpos = 0
+               ypos = ypos + self.piece_h
+       doc.bind('mousedown', self.shuffle_puzzle)
+   
+   def shuffle_puzzle(self, e):
+       random.shuffle(self.pieces)
+       self.ctx.clearRect(0,0,self.puzzle_w, self.puzzle_h)
+       xpos = 0
+       ypos = 0
+       for piece in self.pieces:
+           piece['xpos'] = xpos
+           piece['ypos'] = ypos
+           self.ctx.drawImage(self.img.elt,
+                              piece['sx'], piece['sy'], self.piece_w, self.piece_h,
+                              xpos, ypos, self.piece_w, self.piece_h)
+           self.ctx.strokeRect(xpos, ypos, self.piece_w, self.piece_h);
+           xpos = xpos + self.piece_w
+           if xpos >= self.puzzle_w:
+               xpos = 0
+               ypos = ypos + self.piece_h
+       doc.unbind('mousedown')
+       doc.onmousedown = self.on_puzzle_click
+       
+   def on_puzzle_click(self, e):
+       if e.layerX or e.layerX == 0:
+           self.mouse['x'] = e.layerX - self.canvas.offsetLeft
+           self.mouse['y'] = e.layerY - self.canvas.offsetTop
+       elif e.offsetX or e.offsetX == 0:
+           self.mouse['x'] = e.offsetX - self.canvas.offsetLeft
+           self.mouse['y'] = e.offsetY - self.canvas.offsetTop
+       self.current_piece = self.check_piece_clicked()
+       if self.current_piece:
+           self.ctx.clearRect(self.current_piece['xpos'],
+                              self.current_piece['ypos'],
+                              self.piece_w, self.piece_h)
+           self.ctx.save()
+           self.ctx.globalAlpha = 0.9
+           self.ctx.drawImage(self.img.elt, self.current_piece['sx'], self.current_piece['sy'],
+                                        self.piece_w, self.piece_h,
+                                        self.mouse['x'] - (self.piece_w / 2),
+                                        self.mouse['y'] - (self.piece_h / 2),
+                                        self.piece_w, self.piece_h)
+           self.ctx.restore()
+           doc.onmousemove = self.update_puzzle
+           doc.onmouseup = self.piece_dropped
+   
+   def check_piece_clicked(self):
+       for piece in self.pieces:
+           if ((self.mouse['x'] < piece['xpos']) or
+               (self.mouse['x'] > (piece['xpos'] + self.piece_w)) or
+               (self.mouse['y'] < piece['ypos']) or
+               (self.mouse['y'] > (piece['ypos'] + self.piece_h))):
+               pass
+           else:
+               return piece
+       return None
+       
+   def update_puzzle(self, e):
+       self.current_drop_piece = None
+       if e.layerX or e.layerX == 0:
+           self.mouse['x'] = e.layerX - self.canvas.offsetLeft
+           self.mouse['y'] = e.layerY - self.canvas.offsetTop
+       elif e.offsetX or e.offsetX == 0:
+           self.mouse['x'] = e.offsetX - self.canvas.offsetLeft
+           self.mouse['y'] = e.offsetY - self.canvas.offsetTop
+       self.ctx.clearRect(0, 0, self.puzzle_w, self.puzzle_h)
+       for piece in self.pieces:
+           if piece == self.current_piece:
+               continue
+           self.ctx.drawImage(self.img.elt, piece['sx'], piece['sy'], 
+                                        self.piece_w, self.piece_h, 
+                                        piece['xpos'], piece['ypos'], 
+                                        self.piece_w, self.piece_h)
+           self.ctx.strokeRect(piece['xpos'], piece['ypos'], 
+                               self.piece_w, self.piece_h)
+           if self.current_drop_piece == None:
+               if (self.mouse['x'] < piece['xpos'] or 
+                   self.mouse['x'] > piece['xpos'] + self.piece_w or
+                   self.mouse['y'] < piece['ypos'] or
+                   self.mouse['y'] > piece['ypos'] + self.piece_h):
+                   pass
+               else:
+                   self.current_drop_piece = piece
+                   self.ctx.save()
+                   self.ctx.globalAlpha = 0.4
+                   self.ctx.fillStyle = self.puzzle_hover_tint
+                   self.ctx.fillRect(self.current_drop_piece['xpos'],
+                                     self.current_drop_piece['ypos'],
+                                     self.piece_w, self.piece_h)
+                   self.ctx.restore()
+       self.ctx.save()
+       self.ctx.globalAlpha = 0.6
+       self.ctx.drawImage(self.img.elt, self.current_piece['sx'], 
+                                    self.current_piece['sx'], 
+                                    self.piece_w, self.piece_h, 
+                                    self.mouse['x'] - (self.piece_w / 2), 
+                                    self.mouse['y'] - (self.piece_h / 2), 
+                                    self.piece_w, self.piece_h)
+       self.ctx.restore()
+       self.ctx.strokeRect(self.mouse['x'] - (self.piece_w / 2),
+                           self.mouse['y'] - (self.piece_h / 2), 
+                           self.piece_w, self.piece_h)
+   
+   def piece_dropped(self,e):
+       doc.onmousemove = None
+       doc.onmouseup = None
+       if self.current_drop_piece != None:
+           tmp = {'xpos': self.current_piece['xpos'],
+           	      'ypos': self.current_piece['ypos']}
+           self.current_piece['xpos'] = self.current_drop_piece['xpos']
+           self.current_piece['ypos'] = self.current_drop_piece['ypos']
+           self.current_drop_piece['xpos'] = tmp['xpos']
+           self.current_drop_piece['ypos'] = tmp['ypos']
+       self.reset_puzzle_check_win()
+
+   def reset_puzzle_check_win(self):
+       self.ctx.clearRect(0,0, self.puzzle_w, self.puzzle_h)
+       game_win = True
+       for piece in self.pieces:
+           self.ctx.drawImage(self.img.elt, piece['sx'], piece['sy'], 
+                                        self.piece_w, self.piece_h, 
+                                        piece['xpos'], piece['ypos'], 
+                                        self.piece_w, self.piece_h)
+           self.ctx.strokeRect(piece['xpos'], piece['ypos'], 
+                               self.piece_w, self.piece_h)
+           if piece['xpos'] != piece['sx'] or piece['ypos'] != piece['sy']:
+               game_win = False
+       if game_win:
+           time.set_timeout(self.game_over,500)
+
+   def game_over(self):
+       doc.onmousedown = None
+       doc.onmousemove = None
+       doc.onmouseup = None
+       self.init_puzzle()     
+       
+puzzle = Puzzle()
+
+
+ 
+  </script>
+ 
+ </head>
+
+ <body onload="brython()">
+
+   <div class="navbar navbar-inverse navbar-fixed-top">
+     <div class="container">
+       <div class="navbar-header">
+         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+         </button>
+         <a class="navbar-brand" href="#">HTML-Drag&Drop-Brython</a>
+       </div>
+       <div class="collapse navbar-collapse">
+         <ul class="nav navbar-nav">
+           <li><a href="http://www.brython.info">Brython home page</a></li>
+           <li><a href="#">App source</a></li>
+           <li><a href="https://bitbucket.org/olemis/brython/src">Brython source</a></li>
+         </ul>
+       </div><!--/.nav-collapse -->
+     </div>
+   </div>
+
+   <div class="container">
+
+     <div class="starter-template">
+       
+       <h1>HTML5 Drag&Drop example made with Brython</h1>
+       <p class="lead">This simple app has been tested only in Firefox and it's been adapted from 
+                       <a href="http://dev.tutsplus.com/tutorials/create-an-html5-canvas-tile-swapping-puzzle--active-10747">this tutorial</a>.
+       </p>
+       <canvas id="canvas"></canvas>
+       
+     </div><!-- /.starter-template -->
+
+   </div><!-- /.container -->
+
+   <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+   <script src="static/js/jquery.min.js"></script>
+   <!-- Bootstrap core JavaScript
+   ================================================== -->
+   <!-- Placed at the end of the document so the pages load faster -->
+   <script src="static/js/bootstrap.min.js"></script>
+   <!-- Brython scripts
+   ================================================== -->
+
+ </body>
+</html>
