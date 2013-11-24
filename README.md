@@ -29,7 +29,7 @@ Shared folder is [here](https://drive.google.com/folderview?id=0B4OEtv-kAaTBUlE2
 
 * [colors](https://googledrive.com/host/0B4OEtv-kAaTBSllJM19hdkpCeTQ/colors_bootstrapped.html)
 
-* [table](https://googledrive.com/host/0B4OEtv-kAaTBSllJM19hdkpCeTQ/table_bootstrapped.html) (To run this up you should run a server so the link will not work)
+* [table](https://googledrive.com/host/0B4OEtv-kAaTBSllJM19hdkpCeTQ/table_bootstrapped.html) (To run this app you should run a server so the link will not work)
 
 * [puzzle](https://googledrive.com/host/0B4OEtv-kAaTBSllJM19hdkpCeTQ/puzzle_bootstrapped.html)
 
